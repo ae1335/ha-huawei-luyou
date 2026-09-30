@@ -46,7 +46,9 @@ scripts/
 skills/
 analysis/
 backups/
-docs/
+docs/*
+!docs/Q7_端点侦察报告.md
+!docs/q7_map_final.json
 downloads/
 reports/
 artifacts/
