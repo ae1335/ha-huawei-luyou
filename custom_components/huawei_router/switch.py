@@ -359,6 +359,14 @@ async def async_setup_entry(
 
     async_add_entities(switches)
 
+    # Q7 深度适配增强开关（实测端点，失败不影响主集成）
+    try:
+        from .q7_enhance import async_setup_q7_switches
+
+        await async_setup_q7_switches(hass, config_entry, coordinator, async_add_entities)
+    except Exception as ex:  # noqa: BLE001
+        _LOGGER.debug("Q7 enhance switches not available: %s", ex)
+
 
 
     watch_for_additional_routers(coordinator, config_entry, async_add_entities)

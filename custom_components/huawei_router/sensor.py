@@ -472,6 +472,14 @@ async def async_setup_entry(
         coordinator, config_entry, integration_options, async_add_entities
     )
 
+    # Q7 深度适配增强传感器（实测端点，失败不影响主集成）
+    try:
+        from .q7_enhance import async_setup_q7_sensors
+
+        await async_setup_q7_sensors(hass, config_entry, coordinator, async_add_entities)
+    except Exception as ex:  # noqa: BLE001
+        _LOGGER.debug("Q7 enhance sensors not available: %s", ex)
+
 
 # ---------------------------
 #   watch_for_additional_routers

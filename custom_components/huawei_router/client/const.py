@@ -211,5 +211,53 @@ RAW_API_ENDPOINTS: Final = {
     "wlanwps": "api/ntwk/wlanwps",
     "wps_switch": "api/ntwk/wps_switch",
     "xlink_lock_net": "api/ntwk/xlink_lock_net",
+    # ------------------------------------------------------------------
+    # Q7 (MEDUSA2-BR80) 深度适配扩容 —— 来自 Q7 Web UI 前端逆向映射表
+    # （q7_recon/Q7_端点侦察报告.md，2026-09-30，免认证静态资源逆向）
+    # 仅收录读安全（GET 语义）端点；动作类端点（poweroff/reboot/
+    # restoredefcfg/speedtest 触发等）不进白名单，需专用实现。
+    # ------------------------------------------------------------------
+    # --- Mesh 组网 / 子母路由（Q7 招牌）---
+    "getpairstatus": "api/ntwk/getpairstatus",
+    "slavedevinfo": "api/hilink/slavedevinfo",
+    "ntwkcap_compare": "api/hilink/ntwkcap_compare",
+    "hilinkwaninfo": "api/ntwk/hilinkwaninfo",
+    "main_router_ssid": "api/ntwk/main_router_ssid",
+    "WlanTestStatus": "api/ntwk/WlanTestStatus",
+    "wlan_easymesh": "api/ntwk/wlan_easymesh",
+    "l2topo": "api/device/l2topo",
+    # --- AI / 游戏加速（isSupportAiGame / isSupportGameV2）---
+    "aichanoptinfo": "api/ntwk/aichanoptinfo",
+    "tgpgameinfo": "api/app/tgpgameinfo",
+    # --- QoS 新版（isSupportQosNewConfig）---
+    "qos_config": "api/app/qos",
+    # --- WiFi 管理（isSupportWlanTimeSwitchEnhance / WPA3 / BE）---
+    "wlantimeswitch": "api/ntwk/wlantimeswitch",
+    # --- 系统 ---
+    "device_count": "api/system/device_count",
+    "location": "api/system/location",
+    "online_check": "api/system/online_check",
+    "ledstatus": "api/hilink/ledstatus",
+    "country_code": "api/ntwk/country_code",
+    "tr069": "api/app/tr069",
+    # --- 存储（Q7 带 USB）---
+    "fsstatus": "api/usbstorage/fsstatus",
+    "sdcapacity": "api/sdcard/sdcapacity",
+    "usbaccount": "api/usbstorage/usbaccount",
+    # --- 网络 / WAN ---
+    "multiwan": "api/ntwk/multiwan",
+    "multi_bridge_wan": "api/ntwk/multi_bridge_wan",
+    "wansearchcontrol": "api/ntwk/wansearchcontrol",
+    "ethportmode": "api/app/ethportmode",
+    "lan_host": "api/ntwk/lan_host",
+    "lan_ipserverpool": "api/ntwk/lan_ipserverpool",
+    "mcast": "api/ntwk/mcast",
+    # --- 安全 ---
+    "ip6firewall_enable": "api/ntwk/ip6firewall_enable",
+    "ip6firewall_trustlist": "api/ntwk/ip6firewall_trustlist",
+    "urlsec": "api/ntwk/urlsec",
+    # --- 插件 / 附加服务 ---
+    "dms": "api/app/dms",
+    "ioc_device_capacity": "api/system/ioc_device_capacity.json",
 }
 
