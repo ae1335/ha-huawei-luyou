@@ -1,5 +1,17 @@
 # Huawei Router — Home Assistant 自定义集成
 
+> **🚀 Q7 深度适配版（fork of [c3h3-ci/ha-huawei-router](https://github.com/c3h3-ci/ha-huawei-router)）**
+>
+> 本仓库在上游 v1.12.1 基础上，针对**华为凌霄 Q7 网线版（MEDUSA2-BR80-10）**做了深度适配，全部端点均经本地固件实测验证：
+>
+> - `client/const.py`：RAW API 白名单 83 → 116（+33 个 Q7 实测端点）
+> - `q7_enhance.py`：新增 Q7 增强模块 —— **16 个传感器**（路由器 CPU/内存、Mesh 每台 AP 每频段信道与信号质量、网口速率（2.5G）、活跃设备数、防暴力破解拦截计数、固件版本/升级进度等）+ **6 个开关**（IPv6 防火墙、自动升级、WAN 口自适应、WiFi 定时节能/加速、上网行为统计）
+> - 写操作统一走 GET→改→POST 安全链，404 端点自动记忆跳过，不影响上游原功能
+> - 逆向与实测全过程见 [docs/Q7_端点侦察报告.md](docs/Q7_端点侦察报告.md)（132 端点探测：63 存在 / 58 不支持 / 11 动作类）
+>
+> 安装方式与上游一致（HACS 自定义存储库或手动复制 `custom_components/huawei_router`），已有上游集成时覆盖后重启 HA 即可，Q7 实体自动追加。
+
+
 [![HACS Default](https://img.shields.io/badge/HACS-Default-orange.svg)](https://github.com/hacs/integration)
 [![License](https://img.shields.io/github/license/c3h3-ci/ha-huawei-router)](https://github.com/c3h3-ci/ha-huawei-router/blob/main/LICENSE)
 
