@@ -434,6 +434,117 @@ async def async_setup_q7_sensors(
         update_before_add=False,
     )
 
+    # 智慧生活式 AP 卡片：每台 Mesh AP × 每频段一个信道传感器（动态发现，
+    # 新 AP 上线自动补建，unique_id 以 MAC+频段为锚）
+    known_aps: dict[str, bool] = {}
+
+    def _discover() -> None:
+        _discover_ap_entities(coordinator, entry, main_coordinator, known_aps, async_add_entities)
+
+    _discover()
+    entry.async_on_unload(coordinator.async_add_listener(_discover))
+
+
+class Q7APSensor(CoordinatorEntity[Q7EnhanceCoordinator], SensorEntity):
+    """每台 Mesh AP × 每频段：当前信道（附加质量分/信道列表属性）。"""
+
+    def __init__(
+        self,
+        coordinator: Q7EnhanceCoordinator,
+        entry: ConfigEntry,
+        mac: str,
+        ap_name: str | None,
+        band: str,
+        main_coordinator: Any,
+    ) -> None:
+        super().__init__(coordinator)
+        self._mac = mac.upper()
+        self._band = band
+        self._entry = entry
+        self._attr_unique_id = f"{DOMAIN}_q7_ap_{mac.replace(':', '').lower()}_{band.replace('.', '').lower()}"
+        self._attr_device_info = _device_info(main_coordinator)
+        self._attr_icon = "mdi:router-wireless"
+
+    def _current(self) -> dict | None:
+        ci = self.coordinator.value("channelinfo")
+        if not isinstance(ci, dict):
+            return None
+        for ap in ci.get("WifiStatus") or []:
+            if not isinstance(ap, dict) or (ap.get("MacAddress") or "").upper() != self._mac:
+                continue
+            for band in ap.get("ChannelInfo") or []:
+                if isinstance(band, dict) and band.get("FrequencyBand") == self._band:
+                    return band
+        return None
+
+    def _ap_name(self) -> str:
+        ci = self.coordinator.value("channelinfo")
+        if isinstance(ci, dict):
+            for ap in ci.get("WifiStatus") or []:
+                if isinstance(ap, dict) and (ap.get("MacAddress") or "").upper() == self._mac:
+                    return ap.get("Name") or self._mac
+        return self._mac
+
+    @property
+    def name(self) -> str | None:
+        return f"{self._ap_name()} {self._band}"
+
+    @property
+    def available(self) -> bool:
+        return self.coordinator.last_update_success and self._current() is not None
+
+    @property
+    def native_value(self) -> Any:
+        band = self._current()
+        if band is None:
+            return None
+        try:
+            return int(band.get("Channel"))
+        except (TypeError, ValueError):
+            return band.get("Channel")
+
+    @property
+    def extra_state_attributes(self) -> dict | None:
+        band = self._current()
+        if band is None:
+            return None
+        return {
+            "quality_score": band.get("Status"),
+            "channel_list": band.get("ChannelList"),
+            "mac": self._mac,
+            "band": self._band,
+        }
+
+
+def _discover_ap_entities(
+    coordinator: Q7EnhanceCoordinator,
+    entry: ConfigEntry,
+    main_coordinator: Any,
+    known: dict[str, bool],
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """从 channelinfo.WifiStatus 发现 AP×频段并增量建实体。"""
+    ci = coordinator.value("channelinfo")
+    if not isinstance(ci, dict):
+        return
+    new: list[Q7APSensor] = []
+    for ap in ci.get("WifiStatus") or []:
+        if not isinstance(ap, dict):
+            continue
+        mac = (ap.get("MacAddress") or "").upper()
+        if not mac:
+            continue
+        for band in ap.get("ChannelInfo") or []:
+            fb = (band or {}).get("FrequencyBand")
+            if not fb:
+                continue
+            uid = f"{mac}|{fb}"
+            if uid not in known:
+                known[uid] = True
+                new.append(Q7APSensor(coordinator, entry, mac, ap.get("Name"), fb, main_coordinator))
+    if new:
+        async_add_entities(new, update_before_add=False)
+
 
 # ---------------------------------------------------------------------------
 #   开关
