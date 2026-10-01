@@ -135,6 +135,7 @@ class Q7EnhanceCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def _async_update_data(self) -> dict[str, Any]:
         results: dict[str, Any] = {}
+        prev = self.data or {}
 
         async def _read(key: str, path: str) -> None:
             try:
@@ -144,6 +145,9 @@ class Q7EnhanceCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 elif resp.get("status") == 404:
                     self._missing.add(key)
             except Exception as exc:  # noqa: BLE001
+                # 网络抖动/单点超时：沿用上一轮数据，避免实体集体短暂 unavailable
+                if key in prev:
+                    results[key] = prev[key]
                 _LOGGER.debug("Q7 端点 %s 读取失败: %s", key, exc)
 
         await asyncio.gather(
@@ -531,5 +535,7 @@ async def _get_or_create_q7_coordinator(
         interval = int(main_coordinator._integration_options.update_interval)
         coordinator = Q7EnhanceCoordinator(hass, entry, api, interval)
         entry_data[Q7_DOMAIN_KEY] = coordinator
+        # entry reload/卸载时自动停止轮询，避免旧实例残留与新实例双打路由器
+        entry.async_on_unload(coordinator.async_shutdown)
         await coordinator.async_config_entry_first_refresh()
     return coordinator
