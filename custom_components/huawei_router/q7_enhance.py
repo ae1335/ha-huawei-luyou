@@ -57,6 +57,14 @@ Q7_READ_ENDPOINTS: Final[dict[str, str]] = {
     "sntp": "api/ntwk/sntp",
     "wlantimeswitch": "api/ntwk/wlantimeswitch",
     "wlan_time_switch_list": "api/ntwk/wlan_time_switch_list",
+    # 可写开关端点也纳入轮询：CoordinatorEntity.should_poll=False，
+    # 开关状态必须由协调器刷新才能跟随路由器侧变化（App/自动化修改）
+    "ip6firewall_enable": "api/ntwk/ip6firewall_enable",
+    "autoupgrade": "api/system/autoupgrade",
+    "wansearchcontrol": "api/ntwk/wansearchcontrol",
+    "wlanpowertimeswitch": "api/ntwk/wlanpowertimeswitch",
+    "wlantimeaccelerate": "api/ntwk/wlanTimingAccelerate",
+    "userbehavior": "api/system/userbehavior",
 }
 
 # 可写端点（switch 用，字段均经 GET 确认存在）
@@ -165,13 +173,17 @@ class Q7EnhanceCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     # -- 写操作 ---------------------------------------------------------------
     async def set_flag(self, key: str, enabled: bool) -> None:
-        """把布尔值写入可写端点的 Enable / Status 字段。"""
+        """把布尔值写入可写端点的 Enable 字段。"""
         path = Q7_WRITE_ENDPOINTS.get(key)
         if not path:
             raise ValueError(f"Unknown Q7 writable endpoint: {key}")
-        field_name = "Status" if key == "ledstatus" else "Enable"
         # update_config: GET 完整对象 → 覆盖字段 → POST（字段不存在会抛错，安全）
-        await self._api.update_config(path, {field_name: bool(enabled)}, action="update")
+        await self._api.update_config(path, {"Enable": bool(enabled)}, action="update")
+        # 写后路由器读取可能有短暂延迟，先本地落值防止 UI 闪回旧态，再异步校准
+        data = (self.data or {}).get(key)
+        if isinstance(data, dict):
+            data["Enable"] = bool(enabled)
+        self.async_update_listeners()
         await self.async_request_refresh()
 
 
@@ -455,14 +467,17 @@ class Q7Switch(CoordinatorEntity[Q7EnhanceCoordinator], SwitchEntity):
 
     @property
     def available(self) -> bool:
-        # 只读轮询里没有可写端点的数据，只要 coordinator 有过一次成功刷新即可
-        return self.coordinator.last_update_success
+        # 开关端点已并入协调器轮询，端点数据缺失说明固件不支持
+        return self.coordinator.last_update_success and self.coordinator.value(self.entity_description.key) is not None
 
     @property
     def is_on(self) -> bool | None:
-        # LED 的当前态从写端点直接读（轮询集合里没有），其余端点同 path 也未轮询，
-        # 这里用"最近一次写结果 + 启动缓存"策略：首次 async_update 时拉一次。
-        return self._cached_state
+        # 状态从协调器轮询数据读取（可写端点已并入 Q7_READ_ENDPOINTS），
+        # 路由器侧（App/自动化）的状态变化会随刷新自动跟随
+        data = self.coordinator.value(self.entity_description.key)
+        if not isinstance(data, dict):
+            return None
+        return _to_bool(data.get("Enable"))
 
     @property
     def extra_state_attributes(self) -> dict | None:
@@ -476,27 +491,11 @@ class Q7Switch(CoordinatorEntity[Q7EnhanceCoordinator], SwitchEntity):
                 }
         return None
 
-    _cached_state: bool | None = None
-
-    async def async_update(self) -> None:
-        """直接读可写端点，同步开关当前态。"""
-        path = Q7_WRITE_ENDPOINTS[self.entity_description.key]
-        field_name = "Status" if self.entity_description.key == "ledstatus" else "Enable"
-        try:
-            resp = await self.coordinator.api.get_endpoint_config(path)
-            data = resp.get("data")
-            if resp.get("status") == 200 and isinstance(data, dict) and field_name in data:
-                self._cached_state = _to_bool(data.get(field_name))
-        except Exception as exc:  # noqa: BLE001
-            _LOGGER.debug("Q7 开关状态读取失败 %s: %s", self.entity_description.key, exc)
-
     async def async_turn_on(self, **kwargs: Any) -> None:
         await self.coordinator.set_flag(self.entity_description.key, True)
-        self._cached_state = True
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         await self.coordinator.set_flag(self.entity_description.key, False)
-        self._cached_state = False
 
 
 async def async_setup_q7_switches(
@@ -516,7 +515,7 @@ async def async_setup_q7_switches(
         except Exception:  # noqa: BLE001
             continue
         entities.append(Q7Switch(coordinator, entry, desc, main_coordinator))
-    async_add_entities(entities, update_before_add=True)
+    async_add_entities(entities, update_before_add=False)
 
 
 # ---------------------------------------------------------------------------
