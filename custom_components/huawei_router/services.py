@@ -800,7 +800,7 @@ async def _async_add_to_whitelist(hass: HomeAssistant, service: ServiceCall):
 
         raise HomeAssistantError(
 
-            f"Can not find coordinator for mac address '{device_mac}'"
+            f"找不到 MAC 地址为 '{device_mac}' 的协调器"
 
         )
 
@@ -834,7 +834,7 @@ async def _async_add_to_whitelist(hass: HomeAssistant, service: ServiceCall):
 
     if not success:
 
-        raise HomeAssistantError("Can not add item to whitelist")
+        raise HomeAssistantError("添加到白名单失败")
 
 
 
@@ -858,7 +858,7 @@ async def _async_add_to_blacklist(hass: HomeAssistant, service: ServiceCall):
 
         raise HomeAssistantError(
 
-            f"Can not find coordinator for mac address '{device_mac}'"
+            f"找不到 MAC 地址为 '{device_mac}' 的协调器"
 
         )
 
@@ -892,7 +892,7 @@ async def _async_add_to_blacklist(hass: HomeAssistant, service: ServiceCall):
 
     if not success:
 
-        raise HomeAssistantError("Can not add item to blacklist")
+        raise HomeAssistantError("添加到黑名单失败")
 
 
 
@@ -916,7 +916,7 @@ async def _async_remove_from_whitelist(hass: HomeAssistant, service: ServiceCall
 
         raise HomeAssistantError(
 
-            f"Can not find coordinator for mac address '{device_mac}'"
+            f"找不到 MAC 地址为 '{device_mac}' 的协调器"
 
         )
 
@@ -952,7 +952,7 @@ async def _async_remove_from_whitelist(hass: HomeAssistant, service: ServiceCall
 
     if not success:
 
-        raise HomeAssistantError("Can not remove item from whitelist")
+        raise HomeAssistantError("从白名单移除失败")
 
 
 
@@ -976,7 +976,7 @@ async def _async_remove_from_blacklist(hass: HomeAssistant, service: ServiceCall
 
         raise HomeAssistantError(
 
-            f"Can not find coordinator for mac address '{device_mac}'"
+            f"找不到 MAC 地址为 '{device_mac}' 的协调器"
 
         )
 
@@ -1010,7 +1010,7 @@ async def _async_remove_from_blacklist(hass: HomeAssistant, service: ServiceCall
 
     if not success:
 
-        raise HomeAssistantError("Can not remove item from blacklist")
+        raise HomeAssistantError("从黑名单移除失败")
 
 
 
@@ -1036,7 +1036,7 @@ async def _async_setup_guest_network(hass: HomeAssistant, service: ServiceCall):
 
         raise HomeAssistantError(
 
-            f"Can not find coordinator with primary router's serial number '{serial_number}'"
+            f"找不到主路由序列号为 '{serial_number}' 的协调器"
 
         )
 
@@ -1114,7 +1114,7 @@ async def _async_port_mapping_add(hass: HomeAssistant, service: ServiceCall):
             break
 
     if not coordinator:
-        raise HomeAssistantError("Can not find any Huawei router coordinator")
+        raise HomeAssistantError("找不到任何华为路由器协调器")
 
     try:
         success = await coordinator.primary_router_api.add_port_mapping(
@@ -1128,14 +1128,14 @@ async def _async_port_mapping_add(hass: HomeAssistant, service: ServiceCall):
             host_name=host_name,
         )
         if not success:
-            raise HomeAssistantError("Router rejected the add (check logs)")
+            raise HomeAssistantError("路由器拒绝了添加操作（请查看日志）")
 
         _LOGGER.info("Port mapping added: %s (%s)", name, host_ip)
 
     except HomeAssistantError:
         raise
     except Exception as ex:
-        raise HomeAssistantError(f"Error adding port mapping: {ex}")
+        raise HomeAssistantError(f"添加端口映射失败：{ex}")
 
 
 # ---------------------------
@@ -1160,19 +1160,19 @@ async def _async_port_mapping_remove(hass: HomeAssistant, service: ServiceCall):
             break
 
     if not coordinator:
-        raise HomeAssistantError("Can not find any Huawei router coordinator")
+        raise HomeAssistantError("找不到任何华为路由器协调器")
 
     try:
         success = await coordinator.primary_router_api.remove_port_mapping(mapping_id)
         if not success:
-            raise HomeAssistantError("Router rejected the remove (check logs)")
+            raise HomeAssistantError("路由器拒绝了移除操作（请查看日志）")
 
         _LOGGER.info("Port mapping removed: %s", mapping_id)
 
     except HomeAssistantError:
         raise
     except Exception as ex:
-        raise HomeAssistantError(f"Error removing port mapping: {ex}")
+        raise HomeAssistantError(f"移除端口映射失败：{ex}")
 
 
 # ---------------------------
@@ -1192,7 +1192,7 @@ async def _async_port_mapping_list(hass: HomeAssistant, service: ServiceCall):
             break
 
     if not coordinator:
-        raise HomeAssistantError("Can not find any Huawei router coordinator")
+        raise HomeAssistantError("找不到任何华为路由器协调器")
 
     # 返回端口映射列表
     mappings = []
@@ -1231,7 +1231,7 @@ async def _async_port_mapping_state(hass: HomeAssistant, service: ServiceCall):
             break
 
     if not coordinator:
-        raise HomeAssistantError("Can not find any Huawei router coordinator")
+        raise HomeAssistantError("找不到任何华为路由器协调器")
 
     try:
         await coordinator.primary_router_api.set_port_mapping_state(
@@ -1239,7 +1239,7 @@ async def _async_port_mapping_state(hass: HomeAssistant, service: ServiceCall):
         )
         _LOGGER.info("Port mapping %s set to enabled=%s", port_mapping_id, enabled)
     except Exception as ex:
-        raise HomeAssistantError(f"Error setting port mapping state: {ex}")
+        raise HomeAssistantError(f"设置端口映射状态失败：{ex}")
 
 
 # ---------------------------
@@ -1258,7 +1258,7 @@ async def _async_port_trigger_list(hass: HomeAssistant, service: ServiceCall):
             break
 
     if not coordinator:
-        raise HomeAssistantError("Can not find any Huawei router coordinator")
+        raise HomeAssistantError("找不到任何华为路由器协调器")
 
     try:
         triggers = []
@@ -1271,7 +1271,7 @@ async def _async_port_trigger_list(hass: HomeAssistant, service: ServiceCall):
         _LOGGER.info("Port triggers listed: %d found", len(triggers))
         return triggers
     except Exception as ex:
-        raise HomeAssistantError(f"Error listing port triggers: {ex}")
+        raise HomeAssistantError(f"列出端口触发规则失败：{ex}")
 
 
 # ---------------------------
@@ -1297,13 +1297,13 @@ async def _async_port_trigger_state(hass: HomeAssistant, service: ServiceCall):
             break
 
     if not coordinator:
-        raise HomeAssistantError("Can not find any Huawei router coordinator")
+        raise HomeAssistantError("找不到任何华为路由器协调器")
 
     try:
         await coordinator.primary_router_api.set_port_trigger_state(trigger_id, enabled)
         _LOGGER.info("Port trigger %s -> enabled=%s", trigger_id, enabled)
     except Exception as ex:
-        raise HomeAssistantError(f"Error toggling port trigger: {ex}")
+        raise HomeAssistantError(f"切换端口触发规则失败：{ex}")
 
 
 # ---------------------------
@@ -1324,19 +1324,19 @@ async def _async_port_trigger_add(hass: HomeAssistant, service: ServiceCall):
         if coordinator and isinstance(coordinator, HuaweiDataUpdateCoordinator):
             break
     if not coordinator:
-        raise HomeAssistantError("Can not find any Huawei router coordinator")
+        raise HomeAssistantError("找不到任何华为路由器协调器")
 
     try:
         success = await coordinator.primary_router_api.add_port_trigger(
             name, application_id, enabled
         )
         if not success:
-            raise HomeAssistantError("Router rejected add (need valid ApplicationID)")
+            raise HomeAssistantError("路由器拒绝了添加操作（需要有效的 ApplicationID）")
         _LOGGER.info("Port trigger added: %s", name)
     except HomeAssistantError:
         raise
     except Exception as ex:
-        raise HomeAssistantError(f"Error adding port trigger: {ex}")
+        raise HomeAssistantError(f"添加端口触发失败：{ex}")
 
 
 # ---------------------------
@@ -1354,17 +1354,17 @@ async def _async_port_trigger_remove(hass: HomeAssistant, service: ServiceCall):
         if coordinator and isinstance(coordinator, HuaweiDataUpdateCoordinator):
             break
     if not coordinator:
-        raise HomeAssistantError("Can not find any Huawei router coordinator")
+        raise HomeAssistantError("找不到任何华为路由器协调器")
 
     try:
         success = await coordinator.primary_router_api.remove_port_trigger(trigger_id)
         if not success:
-            raise HomeAssistantError("Router rejected remove (check logs)")
+            raise HomeAssistantError("路由器拒绝了移除操作（请查看日志）")
         _LOGGER.info("Port trigger removed: %s", trigger_id)
     except HomeAssistantError:
         raise
     except Exception as ex:
-        raise HomeAssistantError(f"Error removing port trigger: {ex}")
+        raise HomeAssistantError(f"移除端口触发规则失败：{ex}")
 
 
 # ---------------------------
@@ -1383,7 +1383,7 @@ async def _async_upnp_port_mapping_list(hass: HomeAssistant, service: ServiceCal
             break
 
     if not coordinator:
-        raise HomeAssistantError("Can not find any Huawei router coordinator")
+        raise HomeAssistantError("找不到任何华为路由器协调器")
 
     try:
         mappings = []
@@ -1399,7 +1399,7 @@ async def _async_upnp_port_mapping_list(hass: HomeAssistant, service: ServiceCal
         _LOGGER.info("UPnP port mappings listed: %d found", len(mappings))
         return mappings
     except Exception as ex:
-        raise HomeAssistantError(f"Error listing UPnP port mappings: {ex}")
+        raise HomeAssistantError(f"列出 UPnP 端口映射失败：{ex}")
 
 
 # ---------------------------
@@ -1418,7 +1418,7 @@ async def _async_wan_reconnect(hass: HomeAssistant, service: ServiceCall):
             break
 
     if not coordinator:
-        raise HomeAssistantError("Can not find any Huawei router coordinator")
+        raise HomeAssistantError("找不到任何华为路由器协调器")
 
     try:
         from .client.classes import Action
@@ -1429,7 +1429,7 @@ async def _async_wan_reconnect(hass: HomeAssistant, service: ServiceCall):
     except HomeAssistantError:
         raise
     except Exception as ex:
-        raise HomeAssistantError(f"WAN reconnect failed: {ex}") from ex
+        raise HomeAssistantError(f"WAN 重连失败：{ex}") from ex
 
 
 # ---------------------------
@@ -1454,7 +1454,7 @@ async def _async_dhcp_static_lease_list(hass: HomeAssistant, service: ServiceCal
     _LOGGER.debug("Service '%s' called", service.service)
     coordinator = _find_any_coordinator(hass)
     if not coordinator:
-        raise HomeAssistantError("Can not find any Huawei router coordinator")
+        raise HomeAssistantError("找不到任何华为路由器协调器")
     try:
         leases = []
         for lease in await coordinator.primary_router_api.get_dhcp_static_leases():
@@ -1467,7 +1467,7 @@ async def _async_dhcp_static_lease_list(hass: HomeAssistant, service: ServiceCal
         _LOGGER.info("DHCP static leases listed: %d found", len(leases))
         return leases
     except Exception as ex:
-        raise HomeAssistantError(f"Error listing DHCP static leases: {ex}")
+        raise HomeAssistantError(f"列出 DHCP 静态租约失败：{ex}")
 
 
 # ---------------------------
@@ -1480,18 +1480,18 @@ async def _async_dhcp_static_lease_add(hass: HomeAssistant, service: ServiceCall
     enabled = service.data.get("enabled", True)
     coordinator = _find_any_coordinator(hass)
     if not coordinator:
-        raise HomeAssistantError("Can not find any Huawei router coordinator")
+        raise HomeAssistantError("找不到任何华为路由器协调器")
     try:
         success = await coordinator.primary_router_api.add_dhcp_static_lease(
             ip_address, mac_address, enabled
         )
         if not success:
-            raise HomeAssistantError("Router rejected the add (check logs)")
+            raise HomeAssistantError("路由器拒绝了添加操作（请查看日志）")
         _LOGGER.info("DHCP static lease added: %s -> %s", mac_address, ip_address)
     except HomeAssistantError:
         raise
     except Exception as ex:
-        raise HomeAssistantError(f"Error adding DHCP static lease: {ex}")
+        raise HomeAssistantError(f"添加 DHCP 静态租约失败：{ex}")
 
 
 # ---------------------------
@@ -1502,16 +1502,16 @@ async def _async_dhcp_static_lease_remove(hass: HomeAssistant, service: ServiceC
     lease_id = service.data["lease_id"]
     coordinator = _find_any_coordinator(hass)
     if not coordinator:
-        raise HomeAssistantError("Can not find any Huawei router coordinator")
+        raise HomeAssistantError("找不到任何华为路由器协调器")
     try:
         success = await coordinator.primary_router_api.remove_dhcp_static_lease(lease_id)
         if not success:
-            raise HomeAssistantError("Router rejected the remove (check logs)")
+            raise HomeAssistantError("路由器拒绝了移除操作（请查看日志）")
         _LOGGER.info("DHCP static lease removed: %s", lease_id)
     except HomeAssistantError:
         raise
     except Exception as ex:
-        raise HomeAssistantError(f"Error removing DHCP static lease: {ex}")
+        raise HomeAssistantError(f"移除 DHCP 静态租约失败：{ex}")
 
 
 # ---------------------------
@@ -1523,12 +1523,12 @@ async def _async_dhcp_static_lease_state(hass: HomeAssistant, service: ServiceCa
     enabled = service.data["enabled"]
     coordinator = _find_any_coordinator(hass)
     if not coordinator:
-        raise HomeAssistantError("Can not find any Huawei router coordinator")
+        raise HomeAssistantError("找不到任何华为路由器协调器")
     try:
         await coordinator.primary_router_api.set_dhcp_static_lease_state(lease_id, enabled)
         _LOGGER.info("DHCP static lease %s -> enabled=%s", lease_id, enabled)
     except Exception as ex:
-        raise HomeAssistantError(f"Error toggling DHCP static lease: {ex}")
+        raise HomeAssistantError(f"切换 DHCP 静态租约失败：{ex}")
 
 
 # ---------------------------
@@ -1539,12 +1539,12 @@ async def _async_upnp_set_enabled(hass: HomeAssistant, service: ServiceCall):
     enabled = service.data["enabled"]
     coordinator = _find_any_coordinator(hass)
     if not coordinator:
-        raise HomeAssistantError("Can not find any Huawei router coordinator")
+        raise HomeAssistantError("找不到任何华为路由器协调器")
     try:
         await coordinator.primary_router_api.set_upnp_enabled(enabled)
         _LOGGER.info("UPnP set to enabled=%s", enabled)
     except Exception as ex:
-        raise HomeAssistantError(f"Error setting UPnP state: {ex}")
+        raise HomeAssistantError(f"设置 UPnP 状态失败：{ex}")
 
 
 # ---------------------------
@@ -1555,12 +1555,12 @@ async def _async_ipv6_set_enabled(hass: HomeAssistant, service: ServiceCall):
     enabled = service.data["enabled"]
     coordinator = _find_any_coordinator(hass)
     if not coordinator:
-        raise HomeAssistantError("Can not find any Huawei router coordinator")
+        raise HomeAssistantError("找不到任何华为路由器协调器")
     try:
         await coordinator.primary_router_api.set_ipv6_enabled(enabled)
         _LOGGER.info("IPv6 set to enabled=%s", enabled)
     except Exception as ex:
-        raise HomeAssistantError(f"Error setting IPv6 state: {ex}")
+        raise HomeAssistantError(f"设置 IPv6 状态失败：{ex}")
 
 
 # ---------------------------
@@ -1571,12 +1571,12 @@ async def _async_band_steering_set_enabled(hass: HomeAssistant, service: Service
     enabled = service.data["enabled"]
     coordinator = _find_any_coordinator(hass)
     if not coordinator:
-        raise HomeAssistantError("Can not find any Huawei router coordinator")
+        raise HomeAssistantError("找不到任何华为路由器协调器")
     try:
         await coordinator.primary_router_api.set_band_steering_enabled(enabled)
         _LOGGER.info("Band steering set to enabled=%s", enabled)
     except Exception as ex:
-        raise HomeAssistantError(f"Error setting band steering: {ex}")
+        raise HomeAssistantError(f"设置双频优选失败：{ex}")
 
 
 # ---------------------------
@@ -1587,12 +1587,12 @@ async def _async_smart_connect_set_enabled(hass: HomeAssistant, service: Service
     enabled = service.data["enabled"]
     coordinator = _find_any_coordinator(hass)
     if not coordinator:
-        raise HomeAssistantError("Can not find any Huawei router coordinator")
+        raise HomeAssistantError("找不到任何华为路由器协调器")
     try:
         await coordinator.primary_router_api.set_smart_connect_enabled(enabled)
         _LOGGER.info("Smart connect set to enabled=%s", enabled)
     except Exception as ex:
-        raise HomeAssistantError(f"Error setting smart connect: {ex}")
+        raise HomeAssistantError(f"设置智能连接失败：{ex}")
 
 
 # ---------------------------
@@ -1603,12 +1603,12 @@ async def _async_firewall_set_level(hass: HomeAssistant, service: ServiceCall):
     level = service.data["level"]
     coordinator = _find_any_coordinator(hass)
     if not coordinator:
-        raise HomeAssistantError("Can not find any Huawei router coordinator")
+        raise HomeAssistantError("找不到任何华为路由器协调器")
     try:
         await coordinator.primary_router_api.set_firewall_level(level)
         _LOGGER.info("Firewall level set to %s", level)
     except Exception as ex:
-        raise HomeAssistantError(f"Error setting firewall level: {ex}")
+        raise HomeAssistantError(f"设置防火墙级别失败：{ex}")
 
 
 # ---------------------------
@@ -1620,12 +1620,12 @@ async def _async_dmz_set(hass: HomeAssistant, service: ServiceCall):
     ip_address = service.data.get("ip_address", "")
     coordinator = _find_any_coordinator(hass)
     if not coordinator:
-        raise HomeAssistantError("Can not find any Huawei router coordinator")
+        raise HomeAssistantError("找不到任何华为路由器协调器")
     try:
         await coordinator.primary_router_api.set_dmz(enabled, ip_address)
         _LOGGER.info("DMZ set: enabled=%s, ip=%s", enabled, ip_address)
     except Exception as ex:
-        raise HomeAssistantError(f"Error setting DMZ: {ex}")
+        raise HomeAssistantError(f"设置 DMZ 失败：{ex}")
 
 
 # ---------------------------
@@ -1637,12 +1637,12 @@ async def _async_scheduled_reboot_set(hass: HomeAssistant, service: ServiceCall)
     reboot_time = service.data.get("reboot_time", "")
     coordinator = _find_any_coordinator(hass)
     if not coordinator:
-        raise HomeAssistantError("Can not find any Huawei router coordinator")
+        raise HomeAssistantError("找不到任何华为路由器协调器")
     try:
         await coordinator.primary_router_api.set_scheduled_reboot(enabled, reboot_time)
         _LOGGER.info("Scheduled reboot set: enabled=%s, time=%s", enabled, reboot_time)
     except Exception as ex:
-        raise HomeAssistantError(f"Error setting scheduled reboot: {ex}")
+        raise HomeAssistantError(f"设置定时重启失败：{ex}")
 
 
 # ---------------------------
@@ -1653,11 +1653,11 @@ async def _async_ddns_status(hass: HomeAssistant, service: ServiceCall):
     _LOGGER.debug("Service '%s' called", service.service)
     coordinator = _find_any_coordinator(hass)
     if not coordinator:
-        raise HomeAssistantError("Can not find any Huawei router coordinator")
+        raise HomeAssistantError("找不到任何华为路由器协调器")
     try:
         return await coordinator.primary_router_api.get_ddns_status()
     except Exception as ex:
-        raise HomeAssistantError(f"Error getting DDNS status: {ex}")
+        raise HomeAssistantError(f"获取 DDNS 状态失败：{ex}")
 
 
 # ---------------------------
@@ -1668,12 +1668,12 @@ async def _async_ddns_set_enabled(hass: HomeAssistant, service: ServiceCall):
     enabled = service.data["enabled"]
     coordinator = _find_any_coordinator(hass)
     if not coordinator:
-        raise HomeAssistantError("Can not find any Huawei router coordinator")
+        raise HomeAssistantError("找不到任何华为路由器协调器")
     try:
         await coordinator.primary_router_api.set_ddns_enabled(enabled)
         _LOGGER.info("DDNS set to enabled=%s", enabled)
     except Exception as ex:
-        raise HomeAssistantError(f"Error setting DDNS state: {ex}")
+        raise HomeAssistantError(f"设置 DDNS 状态失败：{ex}")
 
 
 # ---------------------------
@@ -1685,12 +1685,12 @@ async def _async_device_set_name(hass: HomeAssistant, service: ServiceCall):
     name = service.data["name"]
     coordinator = _find_any_coordinator(hass)
     if not coordinator:
-        raise HomeAssistantError("Can not find any Huawei router coordinator")
+        raise HomeAssistantError("找不到任何华为路由器协调器")
     try:
         await coordinator.primary_router_api.set_device_name(mac_address, name)
         _LOGGER.info("Device %s renamed to %s", mac_address, name)
     except Exception as ex:
-        raise HomeAssistantError(f"Error renaming device: {ex}")
+        raise HomeAssistantError(f"设备改名失败：{ex}")
 
 
 # ---------------------------
@@ -1704,7 +1704,7 @@ async def _async_device_set_rate_limit(hass: HomeAssistant, service: ServiceCall
     download_kbps = service.data.get("download_kbps")
     coordinator = _find_any_coordinator(hass)
     if not coordinator:
-        raise HomeAssistantError("Can not find any Huawei router coordinator")
+        raise HomeAssistantError("找不到任何华为路由器协调器")
     try:
         await coordinator.primary_router_api.set_device_rate_limit(
             mac_address,
@@ -1720,7 +1720,7 @@ async def _async_device_set_rate_limit(hass: HomeAssistant, service: ServiceCall
             download_kbps,
         )
     except Exception as ex:
-        raise HomeAssistantError(f"Error setting device rate limit: {ex}")
+        raise HomeAssistantError(f"设置设备限速失败：{ex}")
 
 
 # ---------------------------
@@ -1731,12 +1731,12 @@ async def _async_device_remove(hass: HomeAssistant, service: ServiceCall):
     mac_address = service.data[_FIELD_MAC_ADDRESS]
     coordinator = _find_any_coordinator(hass)
     if not coordinator:
-        raise HomeAssistantError("Can not find any Huawei router coordinator")
+        raise HomeAssistantError("找不到任何华为路由器协调器")
     try:
         await coordinator.primary_router_api.remove_device(mac_address)
         _LOGGER.info("Device removed: %s", mac_address)
     except Exception as ex:
-        raise HomeAssistantError(f"Error removing device: {ex}")
+        raise HomeAssistantError(f"移除设备失败：{ex}")
 
 
 # ---------------------------
@@ -1748,7 +1748,7 @@ async def _async_read_config(
     """GET 指定配置端点并返回原始 JSON（dict / list）。"""
     coordinator = _find_any_coordinator(hass)
     if not coordinator:
-        raise HomeAssistantError("Can not find any Huawei router coordinator")
+        raise HomeAssistantError("找不到任何华为路由器协调器")
     try:
         _LOGGER.debug("Service '%s' called: GET %s", service.service, path)
         return await coordinator.primary_router_api.get_config(path)
@@ -1762,7 +1762,7 @@ async def _async_update_config(
     """GET 完整对象 → 覆盖 updates → POST。"""
     coordinator = _find_any_coordinator(hass)
     if not coordinator:
-        raise HomeAssistantError("Can not find any Huawei router coordinator")
+        raise HomeAssistantError("找不到任何华为路由器协调器")
     try:
         _LOGGER.debug(
             "Service '%s' called: update %s %s", service.service, path, updates
@@ -1783,13 +1783,13 @@ async def _async_api_get(hass: HomeAssistant, service: ServiceCall):
     endpoint = service.data["endpoint"]
     coordinator = _find_any_coordinator(hass)
     if not coordinator:
-        raise HomeAssistantError("Can not find any Huawei router coordinator")
+        raise HomeAssistantError("找不到任何华为路由器协调器")
     try:
         return await coordinator.primary_router_api.get_endpoint_config(
             RAW_API_ENDPOINTS[endpoint]
         )
     except Exception as ex:
-        raise HomeAssistantError(f"Error reading endpoint {endpoint}: {ex}")
+        raise HomeAssistantError(f"读取端点 {endpoint} 失败：{ex}")
 
 
 async def _async_api_set(hass: HomeAssistant, service: ServiceCall):
@@ -1797,16 +1797,16 @@ async def _async_api_set(hass: HomeAssistant, service: ServiceCall):
     endpoint = service.data["endpoint"]
     path = RAW_API_ENDPOINTS.get(endpoint)
     if not path:
-        raise HomeAssistantError(f"Unknown API endpoint: {endpoint}")
+        raise HomeAssistantError(f"未知 API 端点：{endpoint}")
     coordinator = _find_any_coordinator(hass)
     if not coordinator:
-        raise HomeAssistantError("Can not find any Huawei router coordinator")
+        raise HomeAssistantError("找不到任何华为路由器协调器")
     try:
         return await coordinator.primary_router_api.set_endpoint_config(
             path, service.data["data"], service.data.get("action")
         )
     except Exception as ex:
-        raise HomeAssistantError(f"Error writing endpoint {endpoint}: {ex}")
+        raise HomeAssistantError(f"写入端点 {endpoint} 失败：{ex}")
 
 
 # ---------------------------
@@ -1821,7 +1821,7 @@ async def _async_wifi_radio_set_enabled(hass: HomeAssistant, service: ServiceCal
     enabled = service.data["enabled"]
     coordinator = _find_any_coordinator(hass)
     if not coordinator:
-        raise HomeAssistantError("Can not find any Huawei router coordinator")
+        raise HomeAssistantError("找不到任何华为路由器协调器")
     try:
         await coordinator.primary_router_api.set_wifi_radio_enabled(frequency, enabled)
         _LOGGER.info("WiFi radio %s -> enabled=%s", frequency, enabled)
@@ -1837,7 +1837,7 @@ async def _async_wps_set_enabled(hass: HomeAssistant, service: ServiceCall):
     enabled = service.data["enabled"]
     coordinator = _find_any_coordinator(hass)
     if not coordinator:
-        raise HomeAssistantError("Can not find any Huawei router coordinator")
+        raise HomeAssistantError("找不到任何华为路由器协调器")
     try:
         await coordinator.primary_router_api.set_wps_enabled(enabled)
         _LOGGER.info("WPS set to enabled=%s", enabled)
@@ -2014,7 +2014,7 @@ async def _async_homesec_get(hass: HomeAssistant, service: ServiceCall):
     """合并返回家庭安全（防暴力破解 + 防蹭网）配置。"""
     coordinator = _find_any_coordinator(hass)
     if not coordinator:
-        raise HomeAssistantError("Can not find any Huawei router coordinator")
+        raise HomeAssistantError("找不到任何华为路由器协调器")
     try:
         return await coordinator.primary_router_api.get_homesec()
     except Exception as ex:
@@ -2024,7 +2024,7 @@ async def _async_homesec_get(hass: HomeAssistant, service: ServiceCall):
 async def _async_homesec_set(hass: HomeAssistant, service: ServiceCall):
     coordinator = _find_any_coordinator(hass)
     if not coordinator:
-        raise HomeAssistantError("Can not find any Huawei router coordinator")
+        raise HomeAssistantError("找不到任何华为路由器协调器")
     try:
         await coordinator.primary_router_api.set_homesec(
             abfa_enabled=service.data.get("abfa_enabled"),
@@ -2053,7 +2053,7 @@ async def _async_guest_network_limit_rate_get(hass: HomeAssistant, service: Serv
 async def _async_guest_network_limit_rate_set(hass: HomeAssistant, service: ServiceCall):
     coordinator = _find_any_coordinator(hass)
     if not coordinator:
-        raise HomeAssistantError("Can not find any Huawei router coordinator")
+        raise HomeAssistantError("找不到任何华为路由器协调器")
     try:
         await coordinator.primary_router_api.set_guest_network_limit_rate(
             enabled=service.data["enabled"],
@@ -2105,7 +2105,7 @@ async def _async_auto_upgrade_get(hass: HomeAssistant, service: ServiceCall):
 async def _async_auto_upgrade_set(hass: HomeAssistant, service: ServiceCall):
     coordinator = _find_any_coordinator(hass)
     if not coordinator:
-        raise HomeAssistantError("Can not find any Huawei router coordinator")
+        raise HomeAssistantError("找不到任何华为路由器协调器")
     try:
         await coordinator.primary_router_api.set_auto_upgrade(
             enabled=service.data["enabled"],
@@ -2120,7 +2120,7 @@ async def _async_auto_upgrade_set(hass: HomeAssistant, service: ServiceCall):
 async def _async_auto_upgrade_check(hass: HomeAssistant, service: ServiceCall):
     coordinator = _find_any_coordinator(hass)
     if not coordinator:
-        raise HomeAssistantError("Can not find any Huawei router coordinator")
+        raise HomeAssistantError("找不到任何华为路由器协调器")
     try:
         return await coordinator.primary_router_api.check_auto_upgrade()
     except Exception as ex:
@@ -2139,7 +2139,7 @@ async def _async_system_language_set(hass: HomeAssistant, service: ServiceCall):
     language = service.data["language"]
     coordinator = _find_any_coordinator(hass)
     if not coordinator:
-        raise HomeAssistantError("Can not find any Huawei router coordinator")
+        raise HomeAssistantError("找不到任何华为路由器协调器")
     try:
         await coordinator.primary_router_api.set_language(language)
         _LOGGER.info("系统语言已设置为 %s", language)
@@ -2153,7 +2153,7 @@ async def _async_system_language_set(hass: HomeAssistant, service: ServiceCall):
 async def _async_wifi_scan(hass: HomeAssistant, service: ServiceCall):
     coordinator = _find_any_coordinator(hass)
     if not coordinator:
-        raise HomeAssistantError("Can not find any Huawei router coordinator")
+        raise HomeAssistantError("找不到任何华为路由器协调器")
     try:
         return await coordinator.primary_router_api.trigger_wifi_scan()
     except Exception as ex:
@@ -2175,7 +2175,7 @@ async def _async_repeater_diag_get(hass: HomeAssistant, service: ServiceCall):
 async def _async_repeater_dial_set(hass: HomeAssistant, service: ServiceCall):
     coordinator = _find_any_coordinator(hass)
     if not coordinator:
-        raise HomeAssistantError("Can not find any Huawei router coordinator")
+        raise HomeAssistantError("找不到任何华为路由器协调器")
     try:
         await coordinator.primary_router_api.set_repeater_dial()
         _LOGGER.info("中继拨号已触发")
@@ -2200,7 +2200,7 @@ async def _async_netdisk_code_set(hass: HomeAssistant, service: ServiceCall):
 async def _async_hilink_status_get(hass: HomeAssistant, service: ServiceCall):
     coordinator = _find_any_coordinator(hass)
     if not coordinator:
-        raise HomeAssistantError("Can not find any Huawei router coordinator")
+        raise HomeAssistantError("找不到任何华为路由器协调器")
     try:
         return await coordinator.primary_router_api.get_hilink_status()
     except Exception as ex:
@@ -2211,7 +2211,7 @@ async def _async_slave_setup_set(hass: HomeAssistant, service: ServiceCall):
     allow = service.data["allow"]
     coordinator = _find_any_coordinator(hass)
     if not coordinator:
-        raise HomeAssistantError("Can not find any Huawei router coordinator")
+        raise HomeAssistantError("找不到任何华为路由器协调器")
     try:
         await coordinator.primary_router_api.set_slave_setup(allow)
         _LOGGER.info("HiLink 组网允许状态已设置为 %s", allow)
@@ -2222,7 +2222,7 @@ async def _async_slave_setup_set(hass: HomeAssistant, service: ServiceCall):
 async def _async_multi_host_info_get(hass: HomeAssistant, service: ServiceCall):
     coordinator = _find_any_coordinator(hass)
     if not coordinator:
-        raise HomeAssistantError("Can not find any Huawei router coordinator")
+        raise HomeAssistantError("找不到任何华为路由器协调器")
     try:
         return await coordinator.primary_router_api.get_multi_host_info()
     except Exception as ex:

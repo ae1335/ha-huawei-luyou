@@ -102,27 +102,27 @@ def handle_auth_exception(func):
         except ApiCallError as ex:
             if ex.category == APICALL_ERRCAT_CREDENTIALS:
                 raise AuthenticationError(
-                    "Invalid username or password", AUTH_FAILURE_CREDENTIALS
+                    "用户名或密码错误", AUTH_FAILURE_CREDENTIALS
                 )
             if ex.category == APICALL_ERRCAT_CSRF:
-                raise AuthenticationError("CSRF error, try again", AUTH_FAILURE_CSRF)
+                raise AuthenticationError("CSRF 校验失败，正在重试", AUTH_FAILURE_CSRF)
 
             if ex.category == APICALL_ERRCAT_TOO_MANY_USERS:
                 raise AuthenticationError(
-                    "Too many users, wait some time before retry",
+                    "登录用户数已达上限，请稍后重试",
                     AUTH_FAILURE_TOO_MANY_USERS,
                 )
 
             logger.debug("Authentication failed: %s", {repr(ex)})
             raise AuthenticationError(
-                "Authentication failed due to api call error", AUTH_FAILURE_GENERAL
+                "认证失败（API 调用错误）", AUTH_FAILURE_GENERAL
             )
         except AuthenticationError:
             raise
         except Exception as ex:
             logger.debug("Authentication failed: %s", {repr(ex)})
             raise AuthenticationError(
-                "Authentication failed due to unknown error", AUTH_FAILURE_GENERAL
+                "认证失败（未知错误）", AUTH_FAILURE_GENERAL
             )
 
     return wrapper
@@ -258,7 +258,7 @@ class HuaweiCoreApi:
             error_category = data.get("errorCategory", "unknown")
             self._logger.debug("Error data detected in the response. %s", data)
             raise ApiCallError(
-                "Api call returns unsuccessful result", error_code, error_category
+                "API 调用返回失败结果", error_code, error_category
             )
 
         if "errcode" in data and data["errcode"] != 0:
@@ -268,7 +268,7 @@ class HuaweiCoreApi:
             )
             self._logger.debug("Error code detected in the response. %s", data)
             raise ApiCallError(
-                "Api call returns unsuccessful result", error_code, error_category
+                "API 调用返回失败结果", error_code, error_category
             )
 
     def _check_has_cookies(self, cookie_jar: AbstractCookieJar, url: URL) -> None:
@@ -336,7 +336,7 @@ class HuaweiCoreApi:
         except Exception as ex:
             self._logger.debug("GET %s failed: %s", path, str(ex))
             raise ApiCallError(
-                f"Can not perform GET request at {path} cause of {repr(ex)}",
+                f"GET 请求 {path} 失败：{ex}",
                 APICALL_ERRCODE_REQUEST,
                 APICALL_ERRCAT_REQUEST,
             )
@@ -361,7 +361,7 @@ class HuaweiCoreApi:
         except Exception as ex:
             self._logger.debug("POST %s failed: %s", path, str(ex))
             raise ApiCallError(
-                f"Can not perform POST request at {path} cause of {repr(ex)}",
+                f"POST 请求 {path} 失败：{ex}",
                 APICALL_ERRCODE_REQUEST,
                 APICALL_ERRCAT_REQUEST,
             )
@@ -396,7 +396,7 @@ class HuaweiCoreApi:
 
         if not await self._init_csrf():
             raise AuthenticationError(
-                "Failed to get initial CSRF", AUTH_FAILURE_GENERAL
+                "获取初始 CSRF 失败", AUTH_FAILURE_GENERAL
             )
 
         self._check_has_cookies(self._session.cookie_jar, URL(self._base_url))
@@ -416,7 +416,7 @@ class HuaweiCoreApi:
                 "Authentication failed: can not send nonce, status is %s",
                 response.status,
             )
-            raise AuthenticationError("Failed to send nonce", AUTH_FAILURE_GENERAL)
+            raise AuthenticationError("发送 nonce 失败", AUTH_FAILURE_GENERAL)
 
         result = await _get_response_json(response)
         self._handle_csrf_dict(result)
@@ -446,7 +446,7 @@ class HuaweiCoreApi:
                 "Authentication failed: can not send proof, status is %s",
                 response.status,
             )
-            raise AuthenticationError("Failed to send proof", AUTH_FAILURE_GENERAL)
+            raise AuthenticationError("发送 proof 失败", AUTH_FAILURE_GENERAL)
 
         result = await _get_response_json(response)
         self._handle_csrf_dict(result)
