@@ -1034,7 +1034,13 @@ class HuaweiDataUpdateCoordinator(DataUpdateCoordinator):
 
         try:
 
-            await api.disconnect()
+            # 超时保护：路由器不可达时登出请求会挂起，
+            # await 的登出会连带阻塞 entry 卸载/HA 重载。
+            await asyncio.wait_for(api.disconnect(), timeout=15)
+
+        except asyncio.TimeoutError:
+
+            self._logger.warning("Disconnect timed out (router unreachable?)")
 
         except Exception as ex:
 

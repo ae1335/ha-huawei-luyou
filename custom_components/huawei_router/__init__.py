@@ -129,6 +129,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             await coordinator.unload()
         except Exception as ex:  # noqa: BLE001
             _LOGGER.debug("Cleanup disconnect failed: %s", ex)
+        # 清理 hass.data 残留（set_coordinator 之后失败时）
+        try:
+            pop_coordinator(hass, config_entry)
+        except Exception as ex:  # noqa: BLE001
+            _LOGGER.debug("Cleanup pop failed: %s", ex)
         raise
 
 
