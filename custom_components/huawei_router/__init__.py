@@ -103,20 +103,33 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     coordinator = HuaweiDataUpdateCoordinator(
         hass, config_entry, integration_options, tags_store, zones_store
     )
-    await coordinator.async_config_entry_first_refresh()
+    # ★ session 泄漏防护：setup 任何环节失败都必须登出。
+    #   路由器 session 上限为 2，一旦 setup 失败且不登出，僵尸会话会永久
+    #   占位（进程重启后 cookie 丢失，无法定向登出），导致该设备再也登录不上。
+    try:
+        await coordinator.async_config_entry_first_refresh()
 
-    config_entry.async_on_unload(config_entry.add_update_listener(update_listener))
+        config_entry.async_on_unload(config_entry.add_update_listener(update_listener))
 
-    set_coordinator(hass, config_entry, coordinator)
+        set_coordinator(hass, config_entry, coordinator)
 
-    loaded_platforms = list(_get_platforms(integration_options))
-    set_loaded_platforms(hass, config_entry, loaded_platforms)
-    await hass.config_entries.async_forward_entry_setups(config_entry, loaded_platforms)
+        loaded_platforms = list(_get_platforms(integration_options))
+        set_loaded_platforms(hass, config_entry, loaded_platforms)
+        await hass.config_entries.async_forward_entry_setups(config_entry, loaded_platforms)
 
-    await _async_update_primary_router_name(hass, config_entry, coordinator)
+        await _async_update_primary_router_name(hass, config_entry, coordinator)
 
-    await async_setup_services(hass, config_entry)
-    return True
+        await async_setup_services(hass, config_entry)
+        return True
+    except Exception:
+        _LOGGER.warning(
+            "Setup failed, disconnecting from router to avoid session leak"
+        )
+        try:
+            await coordinator.unload()
+        except Exception as ex:  # noqa: BLE001
+            _LOGGER.debug("Cleanup disconnect failed: %s", ex)
+        raise
 
 
 async def _async_update_primary_router_name(hass, config_entry, coordinator) -> None:
