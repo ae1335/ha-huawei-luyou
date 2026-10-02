@@ -1,6 +1,6 @@
 {
   "domain": "huawei_router",
-  "name": "华为路由器",
+  "name": "Huawei Router",
   "after_dependencies": [
     "zone"
   ],

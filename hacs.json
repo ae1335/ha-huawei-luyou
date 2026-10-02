@@ -1,5 +1,5 @@
 {
-  "name": "华为路由器",
+  "name": "Huawei Router",
   "hide_default_branch": true,
   "render_readme": true,
   "homeassistant": "2023.8"
