@@ -2011,9 +2011,12 @@ class HuaweiDataUpdateCoordinator(DataUpdateCoordinator):
 
         # Fallback: If no routers found from topology, detect from devices_data
         if not mesh_routers:
-            _LOGGER.warning(
-                "No routers found from device topology. Trying fallback detection from HostInfo."
-            )
+            # 独立路由器（如 BE7 Pro 单机）拓扑永远为空，只在首次提示避免刷屏
+            if not getattr(self, "_topology_fallback_warned", False):
+                self._topology_fallback_warned = True
+                _LOGGER.warning(
+                    "No routers found from device topology. Trying fallback detection from HostInfo."
+                )
             for device in devices_data:
                 if device.is_router:
                     _LOGGER.info(

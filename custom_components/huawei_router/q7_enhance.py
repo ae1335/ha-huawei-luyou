@@ -66,9 +66,15 @@ Q7_READ_ENDPOINTS: Final[dict[str, str]] = {
     "wlanpowertimeswitch": "api/ntwk/wlanpowertimeswitch",
     "wlantimeaccelerate": "api/ntwk/wlanTimingAccelerate",
     "userbehavior": "api/system/userbehavior",
+    # --- BE7 Pro (XIHE-BE72) 增量端点（2026-10-02 登录实测；Q7 上 404 自动跳过）---
+    "smartvpn": "api/ntwk/smartvpn",
+    "ethportmode": "api/ntwk/ethportmode",
+    "hilinkwaninfo": "api/ntwk/hilinkwaninfo",
+    "repeaterdiag": "api/ntwk/repeaterdiag",
 }
 
 # 可写端点（switch 用，字段均经 GET 确认存在）
+# smartvpn 为 BE7 Pro 增量（{Enable,Type}，Q7 上 404 由 setup 预检跳过）
 Q7_WRITE_ENDPOINTS: Final[dict[str, str]] = {
     "ledstatus": "api/hilink/ledstatus",
     "ip6firewall_enable": "api/ntwk/ip6firewall_enable",
@@ -77,6 +83,7 @@ Q7_WRITE_ENDPOINTS: Final[dict[str, str]] = {
     "wlanpowertimeswitch": "api/ntwk/wlanpowertimeswitch",
     "wlantimeaccelerate": "api/ntwk/wlanTimingAccelerate",
     "userbehavior": "api/system/userbehavior",
+    "smartvpn": "api/ntwk/smartvpn",
 }
 
 Q7_DOMAIN_KEY: Final = "q7_enhance_coordinator"
@@ -195,6 +202,16 @@ class Q7EnhanceCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 # ---------------------------------------------------------------------------
 #   设备信息（归属到主路由设备）
 # ---------------------------------------------------------------------------
+def _device_serial(main_coordinator: Any) -> str:
+    """设备序列号（unique_id 的设备隔离锚点，多路由器并存必需）。"""
+    try:
+        info = main_coordinator.get_router_info(None)
+    except Exception:  # noqa: BLE001
+        info = None
+    serial = getattr(info, "serial_number", None) if info else None
+    return (str(serial) if serial else "UNKNOWN").strip().upper()
+
+
 def _device_info(main_coordinator: Any) -> DeviceInfo | None:
     try:
         info = main_coordinator.get_router_info(None)
@@ -299,6 +316,19 @@ Q7_SENSORS: Final = [
         name="固件升级进度", unit=PERCENTAGE, icon="mdi:progress-download",
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    # --- BE7 Pro 增量（Q7 上对应端点 404，数据驱动注册自动跳过）---
+    Q7SensorDescription(
+        key="hilinkwaninfo", sub_key="ConnState",
+        name="智联上行连接状态", icon="mdi:lan-connect",
+    ),
+    Q7SensorDescription(
+        key="hilinkwaninfo", sub_key="ConnType",
+        name="智联上行类型", icon="mdi:ethernet",
+    ),
+    Q7SensorDescription(
+        key="ethportmode", sub_key="Mode",
+        name="网口模式", icon="mdi:ethernet",
+    ),
 ]
 
 
@@ -310,7 +340,7 @@ class Q7Sensor(CoordinatorEntity[Q7EnhanceCoordinator], SensorEntity):
         self._entry = entry
         self.entity_description = description
         self._attr_name = description.name
-        self._attr_unique_id = f"{DOMAIN}_q7_{description.key}_{description.sub_key}".replace(" ", "_").lower()
+        self._attr_unique_id = f"{DOMAIN}_q7_{_device_serial(main_coordinator)}_{description.key}_{description.sub_key}".replace(" ", "_").lower()
         self._attr_device_info = _device_info(main_coordinator)
 
     @property
@@ -462,7 +492,7 @@ class Q7APSensor(CoordinatorEntity[Q7EnhanceCoordinator], SensorEntity):
         self._mac = mac.upper()
         self._band = band
         self._entry = entry
-        self._attr_unique_id = f"{DOMAIN}_q7_ap_{mac.replace(':', '').lower()}_{band.replace('.', '').lower()}"
+        self._attr_unique_id = f"{DOMAIN}_q7_{_device_serial(main_coordinator)}_ap_{mac.replace(':', '').lower()}_{band.replace('.', '').lower()}"
         self._attr_device_info = _device_info(main_coordinator)
         self._attr_icon = "mdi:router-wireless"
 
@@ -567,6 +597,8 @@ Q7_SWITCHES: Final = [
     Q7SwitchDescription(key="wlanpowertimeswitch", name="WiFi 定时节能", icon="mdi:wifi-clock"),
     Q7SwitchDescription(key="wlantimeaccelerate", name="WiFi 定时加速", icon="mdi:speedometer"),
     Q7SwitchDescription(key="userbehavior", name="上网行为统计", icon="mdi:chart-line"),
+    # BE7 Pro 增量：新版 SmartVPN（Q7 上 404 由 setup 预检跳过）
+    Q7SwitchDescription(key="smartvpn", name="SmartVPN", icon="mdi:vpn"),
 ]
 
 
@@ -578,7 +610,7 @@ class Q7Switch(CoordinatorEntity[Q7EnhanceCoordinator], SwitchEntity):
         self._entry = entry
         self.entity_description = description
         self._attr_name = description.name
-        self._attr_unique_id = f"{DOMAIN}_q7_switch_{description.key}".lower()
+        self._attr_unique_id = f"{DOMAIN}_q7_{_device_serial(main_coordinator)}_switch_{description.key}".lower()
         self._attr_device_info = _device_info(main_coordinator)
 
     @property
