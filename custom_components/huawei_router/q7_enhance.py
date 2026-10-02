@@ -58,6 +58,8 @@ Q7_READ_ENDPOINTS: Final[dict[str, str]] = {
     "wlantimeswitch": "api/ntwk/wlantimeswitch",
     "wlan_time_switch_list": "api/ntwk/wlan_time_switch_list",
     "ledstatus": "api/hilink/ledstatus",
+    # mesh 节点拓扑（Q7 主路由可见 4 个 mesh 节点；BE7 作为子路由 404 自动跳过）
+    "topology": "api/device/topology",
     # 可写开关端点也纳入轮询：CoordinatorEntity.should_poll=False，
     # 开关状态必须由协调器刷新才能跟随路由器侧变化（App/自动化修改）
     "ip6firewall_enable": "api/ntwk/ip6firewall_enable",
@@ -547,6 +549,93 @@ class Q7APSensor(CoordinatorEntity[Q7EnhanceCoordinator], SensorEntity):
         }
 
 
+def _mesh_nodes(coordinator: Q7EnhanceCoordinator) -> dict[str, dict]:
+    """mesh 节点（HiLinkType=Device，含子路由）按 MAC 索引：在线状态 + 挂载设备。"""
+    topo = coordinator.value("topology")
+    out: dict[str, dict] = {}
+
+    def walk(nodes) -> None:
+        for n in nodes or []:
+            if not isinstance(n, dict):
+                continue
+            mac = (n.get("MACAddress") or "").upper()
+            if n.get("HiLinkType") == "Device" and mac:
+                out[mac] = {
+                    "active": bool(n.get("Active")),
+                    "clients": [c for c in (n.get("ConnectedDevices") or []) if isinstance(c, dict)],
+                }
+            walk(n.get("ConnectedDevices"))
+
+    walk(topo if isinstance(topo, list) else [])
+    return out
+
+
+class Q7MeshNodeSensor(CoordinatorEntity[Q7EnhanceCoordinator], SensorEntity):
+    """每台 Mesh AP（含子路由）一个实体：值=挂载设备数。
+
+    子路由（如 Q7 子路由 K1G3）没有独立管理界面，其数据由主路由的
+    channelinfo（名称/型号/信道）与 device/topology（在线/挂载）提供，
+    这里把两者合并成智慧生活 App 里的「设备卡片」式实体。
+    """
+
+    def __init__(
+        self,
+        coordinator: Q7EnhanceCoordinator,
+        entry: ConfigEntry,
+        mac: str,
+        ap_name: str | None,
+        main_coordinator: Any,
+    ) -> None:
+        super().__init__(coordinator)
+        self._mac = mac.upper()
+        self._entry = entry
+        self._attr_name = f"{ap_name or self._mac} 挂载设备"
+        self._attr_unique_id = f"{DOMAIN}_q7_{_device_serial(main_coordinator)}_node_{mac.replace(':', '').lower()}"
+        self._attr_device_info = _device_info(main_coordinator)
+        self._attr_icon = "mdi:access-point-network"
+
+    def _ap(self) -> dict | None:
+        ci = self.coordinator.value("channelinfo")
+        if not isinstance(ci, dict):
+            return None
+        for ap in ci.get("WifiStatus") or []:
+            if isinstance(ap, dict) and (ap.get("MacAddress") or "").upper() == self._mac:
+                return ap
+        return None
+
+    @property
+    def available(self) -> bool:
+        return self._ap() is not None
+
+    @property
+    def native_value(self) -> Any:
+        node = _mesh_nodes(self.coordinator).get(self._mac)
+        if node is None:
+            return None
+        return len(node["clients"])
+
+    @property
+    def extra_state_attributes(self) -> dict | None:
+        ap = self._ap()
+        if ap is None:
+            return None
+        node = _mesh_nodes(self.coordinator).get(self._mac, {"active": None, "clients": []})
+        bands = {}
+        for band in ap.get("ChannelInfo", []) or []:
+            if isinstance(band, dict):
+                bands[band.get("FrequencyBand", "?")] = {
+                    "channel": band.get("Channel"),
+                    "score": band.get("Status"),
+                }
+        return {
+            "online": node.get("active"),
+            "mac": self._mac,
+            "prod_id": ap.get("ProId"),
+            "bands": bands,
+            "client_macs": [c.get("MACAddress") for c in node.get("clients", [])],
+        }
+
+
 def _discover_ap_entities(
     coordinator: Q7EnhanceCoordinator,
     entry: ConfigEntry,
@@ -558,13 +647,18 @@ def _discover_ap_entities(
     ci = coordinator.value("channelinfo")
     if not isinstance(ci, dict):
         return
-    new: list[Q7APSensor] = []
+    new: list = []
     for ap in ci.get("WifiStatus") or []:
         if not isinstance(ap, dict):
             continue
         mac = (ap.get("MacAddress") or "").upper()
         if not mac:
             continue
+        # AP 级实体（挂载设备数 + 在线 + 型号 + 信道汇总）——子路由的数据视角
+        node_uid = f"{mac}|node"
+        if node_uid not in known:
+            known[node_uid] = True
+            new.append(Q7MeshNodeSensor(coordinator, entry, mac, ap.get("Name"), main_coordinator))
         for band in ap.get("ChannelInfo") or []:
             fb = (band or {}).get("FrequencyBand")
             if not fb:
