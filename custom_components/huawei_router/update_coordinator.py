@@ -1024,17 +1024,21 @@ class HuaweiDataUpdateCoordinator(DataUpdateCoordinator):
 
 
 
-    def _safe_disconnect(self, api: HuaweiApi) -> None:
+    async def _safe_disconnect(self, api: HuaweiApi) -> None:
 
-        """Disconnect from API."""
+        """Disconnect from API and WAIT for the logout to finish.
+
+        路由器 session 上限为 2；fire-and-forget 的登出会在 hass 关闭时被
+        丢弃，导致重启后新登录撞 Too_Many_user。这里必须 await。
+        """
 
         try:
 
-            self.hass.async_create_task(api.disconnect())
+            await api.disconnect()
 
         except Exception as ex:
 
-            self._logger.warning("Can not schedule disconnect: %s", str(ex))
+            self._logger.warning("Disconnect failed: %s", str(ex))
 
 
 
@@ -1358,17 +1362,17 @@ class HuaweiDataUpdateCoordinator(DataUpdateCoordinator):
 
 
 
-    def unload(self) -> None:
+    async def unload(self) -> None:
 
-        """Unload the coordinator and disconnect from API."""
+        """Unload the coordinator and disconnect from API (awaited)."""
 
         self._is_unloaded = True
 
         self._logger.debug("Coordinator is unloaded")
 
-        for router_api in self._apis.values():
+        for router_api in list(self._apis.values()):
 
-            self._safe_disconnect(router_api)
+            await self._safe_disconnect(router_api)
 
 
 

@@ -172,7 +172,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     if unload_ok:
         coordinator = pop_coordinator(hass, config_entry)
         if coordinator and isinstance(coordinator, HuaweiDataUpdateCoordinator):
-            coordinator.unload()
+            await coordinator.unload()
     await async_unload_services(hass, config_entry)
     return unload_ok
 
