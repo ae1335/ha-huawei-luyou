@@ -57,6 +57,7 @@ Q7_READ_ENDPOINTS: Final[dict[str, str]] = {
     "sntp": "api/ntwk/sntp",
     "wlantimeswitch": "api/ntwk/wlantimeswitch",
     "wlan_time_switch_list": "api/ntwk/wlan_time_switch_list",
+    "ledstatus": "api/hilink/ledstatus",
     # 可写开关端点也纳入轮询：CoordinatorEntity.should_poll=False，
     # 开关状态必须由协调器刷新才能跟随路由器侧变化（App/自动化修改）
     "ip6firewall_enable": "api/ntwk/ip6firewall_enable",
