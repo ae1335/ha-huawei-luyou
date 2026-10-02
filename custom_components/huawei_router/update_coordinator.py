@@ -1416,7 +1416,8 @@ class HuaweiDataUpdateCoordinator(DataUpdateCoordinator):
 
             if router_api:
 
-                self._safe_disconnect(router_api)
+                # `@callback` 不能 await：托把普典调度才能登出
+                self.hass.async_create_task(self._safe_disconnect(router_api))
 
 
 
